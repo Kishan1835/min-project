@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  materials Material[]
+  downloads Download[]
+
+  @@map("users")
+}
+
+model Material {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  subject      String
+  course       String
+  year         String
+  semester     String
+  materialType String   @map("material_type")
+  fileType     String   @map("file_type")
+  fileUrl      String   @map("file_url")
+  fileSize     Int?     @map("file_size")
+  uploadedBy   String   @map("uploaded_by")
+  downloads    Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  uploader      User       @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  downloadLogs  Download[]
+
+  // Indexes
+  @@index([course])
+  @@index([subject])
+  @@index([semester])
+  @@index([materialType])
+  @@index([uploadedBy])
+  @@index([createdAt(sort: Desc)])
+  @@map("materials")
+}
+
+model Download {
+  id           String   @id @default(cuid())
+  materialId   String   @map("material_id")
+  userId       String   @map("user_id")
+  downloadedAt DateTime @default(now()) @map("downloaded_at")
+
+  // Relations
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
+  @@index([userId])
+  @@map("downloads")
+}
