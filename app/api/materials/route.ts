@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -73,58 +73,74 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure user exists in our database
-    await prisma.user.upsert({
-      where: { id: userId },
-      update: {
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
-        name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "User",
-        avatarUrl: clerkUser.imageUrl,
-      },
-      create: {
-        id: userId,
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
-        name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "User",
-        avatarUrl: clerkUser.imageUrl,
-      },
-    })
+    try {
+      await prisma.user.upsert({
+        where: { id: userId },
+        update: {
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+          name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "User",
+          avatarUrl: clerkUser.imageUrl,
+        },
+        create: {
+          id: userId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || "",
+          name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || clerkUser.username || "User",
+          avatarUrl: clerkUser.imageUrl,
+        },
+      })
+    } catch (dbError) {
+      console.error("Prisma user upsert error:", dbError)
+      return NextResponse.json({ error: "Failed to ensure user in database" }, { status: 500 })
+    }
 
-    const data: CreateMaterialData = await request.json()
+    let data: CreateMaterialData
+    try {
+      data = await request.json()
+    } catch (jsonError) {
+      console.error("Failed to parse request JSON:", jsonError)
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+    }
 
     const { title, description, subject, course, year, semester, materialType, fileType, fileUrl, fileSize } = data
 
     if (!title || !subject || !course || !year || !semester || !materialType || !fileType || !fileUrl) {
+      console.error("Missing required fields in material data:", data)
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const material = await prisma.material.create({
-      data: {
-        title,
-        description,
-        subject,
-        course,
-        year,
-        semester,
-        materialType,
-        fileType,
-        fileUrl,
-        fileSize,
-        uploadedBy: userId,
-      },
-      include: {
-        uploader: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatarUrl: true,
+    try {
+      const material = await prisma.material.create({
+        data: {
+          title,
+          description,
+          subject,
+          course,
+          year,
+          semester,
+          materialType,
+          fileType,
+          fileUrl,
+          fileSize,
+          uploadedBy: userId,
+        },
+        include: {
+          uploader: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true,
+            },
           },
         },
-      },
-    })
-
-    return NextResponse.json({ material })
+      })
+      return NextResponse.json({ material })
+    } catch (materialCreateError) {
+      console.error("Prisma material create error:", materialCreateError)
+      return NextResponse.json({ error: "Failed to create material entry" }, { status: 500 })
+    }
   } catch (error) {
-    console.error("Create material error:", error)
+    console.error("Create material handler overall error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

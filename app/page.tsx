@@ -48,12 +48,12 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
         <div className="relative container px-4 py-24 sm:py-32">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl text-center">
               <span className="gradient-text">StudyMate:</span>
               <br />
               College Resource Hub
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto text-center">
               Find, Upload, and Share Study Materials With Your Peers. Access thousands of notes, question papers, and
               study resources from students across different courses and semesters.
             </p>

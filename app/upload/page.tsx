@@ -42,13 +42,31 @@ export default function UploadPage() {
     e.preventDefault()
     if (!isSignedIn || !user) return
 
+    if (!formData.file) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to upload.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsUploading(true)
 
     try {
-      // For demo purposes, we'll use a placeholder file URL
-      // In a real app, you'd upload to Vercel Blob or similar service first
-      const fileUrl = `/placeholder-files/${formData.file?.name || "demo-file.pdf"}`
-      const fileType = formData.file?.name.split(".").pop()?.toLowerCase() || "pdf"
+      // Upload file to Vercel Blob
+      const uploadResponse = await fetch(`/api/upload?filename=${formData.file.name}`, {
+        method: 'POST',
+        body: formData.file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error("File upload to Vercel Blob failed")
+      }
+
+      const blob = await uploadResponse.json()
+      const fileUrl = blob.url
+      const fileType = formData.file.name.split(".").pop()?.toLowerCase() || "pdf"
 
       const materialData: CreateMaterialData = {
         title: formData.title,
@@ -60,10 +78,11 @@ export default function UploadPage() {
         materialType: formData.type,
         fileType: fileType,
         fileUrl: fileUrl,
-        fileSize: formData.file?.size,
+        fileSize: formData.file.size,
         uploadedBy: user.id,
       }
 
+      // Submit material data to your API
       const response = await fetch("/api/materials", {
         method: "POST",
         headers: {
@@ -73,7 +92,7 @@ export default function UploadPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Upload failed")
+        throw new Error("Material data submission failed")
       }
 
       toast({
@@ -99,7 +118,7 @@ export default function UploadPage() {
       console.error("Upload error:", error)
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your material. Please try again.",
+        description: `There was an error uploading your material: ${(error as Error).message}. Please try again.`,
         variant: "destructive",
       })
     } finally {
