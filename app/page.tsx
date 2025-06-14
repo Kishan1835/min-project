@@ -1,9 +1,12 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Navigation } from "@/components/navigation"
 import { SignInButton, SignUpButton } from "@clerk/nextjs"
 import { Upload, Search, Download, BookOpen, FileText, Users } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
 
 export default function LandingPage() {
   const features = [
@@ -58,11 +61,18 @@ export default function LandingPage() {
               study resources from students across different courses and semesters.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <SignInButton mode="modal">
-                <Button size="lg" className="gradient-bg text-white px-8 py-3">
-                  Login to Continue
+              {/* Conditional rendering based on user login status */}
+              {useUser().isSignedIn ? (
+                <Button size="lg" asChild className="gradient-bg text-white px-8 py-3">
+                  <Link href="/dashboard">Go to Dashboard</Link>
                 </Button>
-              </SignInButton>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button size="lg" className="gradient-bg text-white px-8 py-3">
+                    Login to Continue
+                  </Button>
+                </SignInButton>
+              )}
               <Button variant="outline" size="lg" asChild>
                 <Link href="/dashboard">Browse Materials</Link>
               </Button>
