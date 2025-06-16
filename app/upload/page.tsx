@@ -33,7 +33,7 @@ export default function UploadPage() {
     file: null as File | null,
   })
 
-  const courses = ["MCA", "B.Tech/BE", "B.Sc", "M.Tech", "BCA", "MBA", "M.Sc"]
+  const courses = ["MCA", "B.Tech", "B.Sc", "M.Tech", "BCA", "MBA", "M.Sc"]
   const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"]
   const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"]
   const materialTypes = ["Notes", "Question Paper", "Assignment", "Project", "Image"]
