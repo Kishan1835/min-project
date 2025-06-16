@@ -1,10 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/prisma"
+import { v4 as uuidv4 } from 'uuid';
+import { addMinutes } from 'date-fns';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { userId } = auth()
+    const { userId } = (await auth())
     const materialId = params.id
 
     if (!userId || !materialId) {
@@ -50,7 +52,21 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       })
     })
 
-    return NextResponse.json({ success: true })
+    // Generate a secure, short-lived token for download
+    const token = uuidv4();
+    const expiresAt = addMinutes(new Date(), 5); // Token valid for 5 minutes
+
+    await prisma.downloadToken.create({
+      data: {
+        token,
+        materialId,
+        userId,
+        expiresAt,
+      },
+    });
+
+    return NextResponse.json({ success: true, token })
+
   } catch (error) {
     console.error("Download tracking error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

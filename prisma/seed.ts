@@ -154,13 +154,8 @@ async function main() {
   ]
 
   for (const material of materials) {
-    await prisma.material.upsert({
-      where: {
-        // Use a combination that's likely to be unique
-        title: material.title,
-      },
-      update: {},
-      create: material,
+    await prisma.material.create({
+      data: material,
     })
   }
 

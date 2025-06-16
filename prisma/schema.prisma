@@ -44,8 +44,9 @@ model Material {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  uploader      User       @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  uploader      User            @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
   downloadLogs  Download[]
+  DownloadToken DownloadToken[]
 
   // Indexes
   @@index([course])
@@ -70,4 +71,16 @@ model Download {
   @@index([materialId])
   @@index([userId])
   @@map("downloads")
+}
+
+model DownloadToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  materialId String
+  userId     String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  material   Material @relation(fields: [materialId], references: [id])
+
+  @@map("download_tokens")
 }

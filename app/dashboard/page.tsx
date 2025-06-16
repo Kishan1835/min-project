@@ -103,15 +103,26 @@ export default function DashboardPage() {
       })
 
       if (response.ok) {
+        const data = await response.json(); // Parse the JSON response
         toast({
           title: "Download Started",
           description: "Your download has been recorded.",
         })
+        // After successfully recording, trigger the actual file download using the token
+        window.open(`/api/materials/download-secure/${data.token}`, "_blank");
+
         // Refresh materials to update download count
         fetchMaterials()
+      } else {
+        throw new Error("Failed to initiate download");
       }
     } catch (error) {
       console.error("Download error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to download material. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -166,6 +177,12 @@ export default function DashboardPage() {
     if (diffDays < 7) return `${diffDays} days ago`
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
     return `${Math.ceil(diffDays / 30)} months ago`
+  }
+
+  // New handler for viewing materials securely
+  const handleView = (materialId: string) => {
+    if (!user) return
+    window.open(`/api/materials/${materialId}/view`, "_blank")
   }
 
   return (
@@ -328,9 +345,11 @@ export default function DashboardPage() {
 
                   {isSignedIn ? (
                     <div className="flex space-x-2 pt-2">
-                      <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View
+                      <Button size="sm" asChild className="flex-1 bg-green-600 hover:bg-green-700">
+                        <a onClick={() => handleView(material.id)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </a>
                       </Button>
                       <Button
                         size="sm"
